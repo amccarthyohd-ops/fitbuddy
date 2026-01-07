@@ -85,78 +85,12 @@
                 <div id="buddySuccess" class="hidden mt-4 bg-green-50 text-green-600 p-4 rounded-xl text-center"></div>
             </div>
 
-            <!-- Buddies List -->
-            <div id="buddiesListSection" class="bg-white rounded-2xl p-6 shadow-xl">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Your Buddies</h2>
-                <div id="buddiesList" class="space-y-3">
-                    <!-- Buddy cards will be added here -->
-                </div>
-                <p id="noBuddies" class="text-gray-500 text-center py-4">No buddies yet. Add a friend above!</p>
+            <!-- All Buddies List -->
+            <div id="buddiesList" class="space-y-4">
+                <!-- Buddy cards will be added here -->
             </div>
 
-            <!-- Selected Buddy Details -->
-            <div id="buddyDetailsSection" class="hidden bg-white rounded-2xl p-6 shadow-xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-xl" id="selectedBuddyInitial">
-                            ?
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-gray-800" id="selectedBuddyName">Loading...</h2>
-                            <p class="text-gray-500 text-sm">Accountability Buddy</p>
-                        </div>
-                    </div>
-                    <button onclick="removeBuddy()" class="text-red-400 hover:text-red-600 text-sm">Remove</button>
-                </div>
-
-                <!-- Buddy's Progress -->
-                <div class="space-y-4">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
-                        <h3 class="font-medium text-gray-700 mb-2">Weight Progress</h3>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="text-sm text-gray-500">Started</p>
-                                <p class="text-lg font-bold text-gray-800" id="buddyStartWeight">-- lbs</p>
-                            </div>
-                            <div class="text-2xl">→</div>
-                            <div>
-                                <p class="text-sm text-gray-500">Current</p>
-                                <p class="text-lg font-bold text-primary" id="buddyCurrentWeight">-- lbs</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Lost</p>
-                                <p class="text-lg font-bold text-green-500" id="buddyWeightLost">-- lbs</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
-                            <p class="text-3xl font-bold text-green-600" id="buddyTodayCalories">--</p>
-                            <p class="text-sm text-gray-500">calories today</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 text-center">
-                            <p class="text-3xl font-bold text-orange-600" id="buddyWeekWorkouts">--</p>
-                            <p class="text-sm text-gray-500">workouts this week</p>
-                        </div>
-                    </div>
-
-                    <!-- Comparison -->
-                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-4 text-white">
-                        <div class="flex justify-between text-center">
-                            <div>
-                                <p class="text-sm opacity-90">You've lost</p>
-                                <p class="text-2xl font-bold" id="yourLost">0 lbs</p>
-                            </div>
-                            <div class="text-2xl">⚔️</div>
-                            <div>
-                                <p class="text-sm opacity-90">They've lost</p>
-                                <p class="text-2xl font-bold" id="theirLost">0 lbs</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <p id="noBuddies" class="bg-white rounded-2xl p-6 shadow-xl text-gray-500 text-center">No buddies yet. Add a friend above!</p>
         </main>
 
         <!-- Bottom Navigation -->
@@ -197,7 +131,6 @@
     <script>
         let currentUser = null;
         let userData = null;
-        let selectedBuddyId = null;
         const MAX_BUDDIES = 15;
 
         firebase.auth().onAuthStateChanged(async (user) => {
@@ -239,42 +172,114 @@
                 document.getElementById('addBuddySection').classList.add('hidden');
             }
 
-            // Load buddies list
-            await loadBuddiesList();
+            // Load all buddies
+            await loadAllBuddies();
         }
 
-        async function loadBuddiesList() {
+        async function loadAllBuddies() {
             const container = document.getElementById('buddiesList');
             container.innerHTML = '';
 
             if (!userData.buddyIds || userData.buddyIds.length === 0) {
                 document.getElementById('noBuddies').classList.remove('hidden');
-                document.getElementById('buddyDetailsSection').classList.add('hidden');
                 return;
             }
 
             document.getElementById('noBuddies').classList.add('hidden');
 
-            // Load each buddy
+            const yourLost = userData.startWeight - userData.currentWeight;
+
+            // Load each buddy with full details
             for (const buddyId of userData.buddyIds) {
                 try {
                     const buddyDoc = await firebase.firestore().collection('users').doc(buddyId).get();
                     if (buddyDoc.exists) {
                         const buddy = buddyDoc.data();
-                        const weightLost = buddy.startWeight - buddy.currentWeight;
+                        const buddyLost = buddy.startWeight - buddy.currentWeight;
+
+                        // Get today's calories
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const foodSnapshot = await firebase.firestore()
+                            .collection('users').doc(buddyId)
+                            .collection('food')
+                            .where('date', '>=', today)
+                            .get();
+                        let todayCalories = 0;
+                        foodSnapshot.forEach(doc => todayCalories += doc.data().calories || 0);
+
+                        // Get this week's workouts
+                        const oneWeekAgo = new Date();
+                        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                        const workoutSnapshot = await firebase.firestore()
+                            .collection('users').doc(buddyId)
+                            .collection('workouts')
+                            .where('date', '>=', oneWeekAgo)
+                            .get();
+                        const weekWorkouts = workoutSnapshot.size;
+
+                        // Determine who's winning
+                        let statusText = '';
+                        let statusClass = '';
+                        if (yourLost > buddyLost) {
+                            statusText = "You're ahead!";
+                            statusClass = 'text-green-500';
+                        } else if (buddyLost > yourLost) {
+                            statusText = "They're ahead!";
+                            statusClass = 'text-orange-500';
+                        } else {
+                            statusText = "Tied!";
+                            statusClass = 'text-blue-500';
+                        }
 
                         const card = document.createElement('div');
-                        card.className = 'flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition';
-                        card.onclick = () => selectBuddy(buddyId);
+                        card.className = 'bg-white rounded-2xl p-5 shadow-xl';
                         card.innerHTML = `
-                            <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                ${buddy.name.charAt(0).toUpperCase()}
+                            <!-- Header -->
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                        ${buddy.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-gray-800">${buddy.name}</p>
+                                        <p class="text-sm ${statusClass} font-medium">${statusText}</p>
+                                    </div>
+                                </div>
+                                <button onclick="removeBuddy('${buddyId}')" class="text-red-400 hover:text-red-600 text-xs">Remove</button>
                             </div>
-                            <div class="flex-1">
-                                <p class="font-medium text-gray-800">${buddy.name}</p>
-                                <p class="text-sm text-gray-500">Lost ${weightLost.toFixed(1)} lbs</p>
+
+                            <!-- Stats Grid -->
+                            <div class="grid grid-cols-4 gap-2 text-center mb-3">
+                                <div class="bg-blue-50 rounded-lg p-2">
+                                    <p class="text-lg font-bold text-blue-600">${buddy.currentWeight}</p>
+                                    <p class="text-xs text-gray-500">lbs</p>
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-2">
+                                    <p class="text-lg font-bold text-green-600">${buddyLost.toFixed(1)}</p>
+                                    <p class="text-xs text-gray-500">lost</p>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-2">
+                                    <p class="text-lg font-bold text-yellow-600">${todayCalories}</p>
+                                    <p class="text-xs text-gray-500">cal</p>
+                                </div>
+                                <div class="bg-orange-50 rounded-lg p-2">
+                                    <p class="text-lg font-bold text-orange-600">${weekWorkouts}</p>
+                                    <p class="text-xs text-gray-500">workouts</p>
+                                </div>
                             </div>
-                            <span class="text-gray-400">→</span>
+
+                            <!-- Comparison Bar -->
+                            <div class="bg-gray-100 rounded-lg p-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">You: <strong>${yourLost.toFixed(1)} lbs</strong></span>
+                                    <span class="text-gray-600">Them: <strong>${buddyLost.toFixed(1)} lbs</strong></span>
+                                </div>
+                                <div class="flex h-2 rounded-full overflow-hidden">
+                                    <div class="bg-primary" style="width: ${getComparisonWidth(yourLost, buddyLost)}%"></div>
+                                    <div class="bg-secondary" style="width: ${getComparisonWidth(buddyLost, yourLost)}%"></div>
+                                </div>
+                            </div>
                         `;
                         container.appendChild(card);
                     }
@@ -282,57 +287,12 @@
                     console.error('Error loading buddy:', err);
                 }
             }
-
-            // Auto-select first buddy if none selected
-            if (!selectedBuddyId && userData.buddyIds.length > 0) {
-                selectBuddy(userData.buddyIds[0]);
-            }
         }
 
-        async function selectBuddy(buddyId) {
-            selectedBuddyId = buddyId;
-            document.getElementById('buddyDetailsSection').classList.remove('hidden');
-
-            const buddyDoc = await firebase.firestore().collection('users').doc(buddyId).get();
-            const buddy = buddyDoc.data();
-
-            // Basic info
-            document.getElementById('selectedBuddyName').textContent = buddy.name;
-            document.getElementById('selectedBuddyInitial').textContent = buddy.name.charAt(0).toUpperCase();
-
-            // Weight progress
-            document.getElementById('buddyStartWeight').textContent = buddy.startWeight + ' lbs';
-            document.getElementById('buddyCurrentWeight').textContent = buddy.currentWeight + ' lbs';
-            const buddyLost = buddy.startWeight - buddy.currentWeight;
-            document.getElementById('buddyWeightLost').textContent = buddyLost.toFixed(1) + ' lbs';
-
-            // Today's calories
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const foodSnapshot = await firebase.firestore()
-                .collection('users').doc(buddyId)
-                .collection('food')
-                .where('date', '>=', today)
-                .get();
-
-            let todayCalories = 0;
-            foodSnapshot.forEach(doc => todayCalories += doc.data().calories || 0);
-            document.getElementById('buddyTodayCalories').textContent = todayCalories;
-
-            // This week's workouts
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            const workoutSnapshot = await firebase.firestore()
-                .collection('users').doc(buddyId)
-                .collection('workouts')
-                .where('date', '>=', oneWeekAgo)
-                .get();
-            document.getElementById('buddyWeekWorkouts').textContent = workoutSnapshot.size;
-
-            // Comparison
-            const yourLost = userData.startWeight - userData.currentWeight;
-            document.getElementById('yourLost').textContent = yourLost.toFixed(1) + ' lbs';
-            document.getElementById('theirLost').textContent = buddyLost.toFixed(1) + ' lbs';
+        function getComparisonWidth(val1, val2) {
+            const total = Math.abs(val1) + Math.abs(val2);
+            if (total === 0) return 50;
+            return (Math.abs(val1) / total) * 100;
         }
 
         function copyBuddyCode() {
@@ -413,28 +373,25 @@
             await loadUserData();
         }
 
-        async function removeBuddy() {
-            if (!selectedBuddyId) return;
-
+        async function removeBuddy(buddyId) {
             if (!confirm('Remove this buddy?')) return;
 
             // Remove from your list
-            const newBuddyIds = userData.buddyIds.filter(id => id !== selectedBuddyId);
+            const newBuddyIds = userData.buddyIds.filter(id => id !== buddyId);
             await firebase.firestore().collection('users').doc(currentUser.uid).update({
                 buddyIds: newBuddyIds
             });
 
             // Remove yourself from their list
-            const buddyDoc = await firebase.firestore().collection('users').doc(selectedBuddyId).get();
+            const buddyDoc = await firebase.firestore().collection('users').doc(buddyId).get();
             if (buddyDoc.exists) {
                 const buddyData = buddyDoc.data();
                 const theirBuddyIds = (buddyData.buddyIds || []).filter(id => id !== currentUser.uid);
-                await firebase.firestore().collection('users').doc(selectedBuddyId).update({
+                await firebase.firestore().collection('users').doc(buddyId).update({
                     buddyIds: theirBuddyIds
                 });
             }
 
-            selectedBuddyId = null;
             await loadUserData();
         }
     </script>
