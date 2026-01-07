@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="95" fill="url(#grad3)"/>
+
+  <!-- Upward arrow / progress -->
+  <path d="M100 40 L140 90 L115 90 L115 150 L85 150 L85 90 L60 90 Z" fill="white"/>
+
+  <!-- Small heart -->
+  <path d="M100 160 C100 160 85 150 85 143 C85 138 90 135 100 142 C110 135 115 138 115 143 C115 150 100 160 100 160Z" fill="#ec4899"/>
+</svg>

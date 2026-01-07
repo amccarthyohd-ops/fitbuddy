@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect x="5" y="5" width="190" height="190" rx="40" fill="url(#grad5)"/>
+
+  <!-- Barbell -->
+  <!-- Left weight plate -->
+  <rect x="25" y="55" width="20" height="90" rx="4" fill="white"/>
+  <rect x="45" y="65" width="12" height="70" rx="3" fill="rgba(255,255,255,0.8)"/>
+
+  <!-- Bar -->
+  <rect x="57" y="90" width="86" height="20" rx="10" fill="white"/>
+
+  <!-- Right weight plate -->
+  <rect x="143" y="65" width="12" height="70" rx="3" fill="rgba(255,255,255,0.8)"/>
+  <rect x="155" y="55" width="20" height="90" rx="4" fill="white"/>
+</svg>

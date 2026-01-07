@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#ef4444"/>
+    </linearGradient>
+  </defs>
+  <rect x="5" y="5" width="190" height="190" rx="45" fill="url(#grad4)"/>
+
+  <!-- Flame / fire icon -->
+  <path d="M100 30
+    C100 30 140 70 140 110
+    C140 145 123 170 100 170
+    C77 170 60 145 60 110
+    C60 70 100 30 100 30Z" fill="white"/>
+  <path d="M100 80
+    C100 80 125 105 125 125
+    C125 145 115 160 100 160
+    C85 160 75 145 75 125
+    C75 105 100 80 100 80Z" fill="url(#grad4)"/>
+</svg>
