@@ -66,8 +66,19 @@
             <div class="bg-white rounded-2xl p-6 shadow-xl">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Log Food</h2>
                 <form id="foodForm" onsubmit="logFood(event)" class="space-y-4">
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Search for food</label>
+                        <input type="text" id="foodSearch" autocomplete="off"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="Type to search (e.g., banana, chicken)..."
+                            oninput="searchFood(this.value)">
+                        <div id="searchResults" class="absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 max-h-60 overflow-y-auto hidden shadow-lg">
+                            <!-- Search results appear here -->
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Search or enter manually below</p>
+                    </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">What did you eat?</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Food name</label>
                         <input type="text" id="foodName" required
                             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
                             placeholder="e.g., Chicken salad">
@@ -282,6 +293,85 @@
                 await loadTodayFood();
             }
         }
+
+        // Food Search using USDA FoodData Central API (free, no key needed)
+        let searchTimeout = null;
+
+        async function searchFood(query) {
+            const resultsDiv = document.getElementById('searchResults');
+
+            // Clear previous timeout
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            // Hide if query too short
+            if (query.length < 2) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+
+            // Wait 300ms after user stops typing
+            searchTimeout = setTimeout(async () => {
+                try {
+                    resultsDiv.innerHTML = '<div class="p-3 text-gray-500 text-center">Searching...</div>';
+                    resultsDiv.classList.remove('hidden');
+
+                    const response = await fetch(
+                        `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=DEMO_KEY&query=${encodeURIComponent(query)}&pageSize=8&dataType=Survey%20%28FNDDS%29,Foundation,SR%20Legacy`
+                    );
+                    const data = await response.json();
+
+                    if (data.foods && data.foods.length > 0) {
+                        resultsDiv.innerHTML = data.foods.map(food => {
+                            // Get nutrients
+                            const calories = getNutrient(food, 'Energy') || 0;
+                            const protein = getNutrient(food, 'Protein') || 0;
+                            const carbs = getNutrient(food, 'Carbohydrate, by difference') || 0;
+                            const fat = getNutrient(food, 'Total lipid (fat)') || 0;
+
+                            return `
+                                <div class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+                                     onclick="selectFood('${escapeHtml(food.description)}', ${Math.round(calories)}, ${Math.round(protein)}, ${Math.round(carbs)}, ${Math.round(fat)})">
+                                    <p class="font-medium text-gray-800 text-sm">${food.description}</p>
+                                    <p class="text-xs text-gray-500">${Math.round(calories)} cal | P: ${Math.round(protein)}g | C: ${Math.round(carbs)}g | F: ${Math.round(fat)}g</p>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        resultsDiv.innerHTML = '<div class="p-3 text-gray-500 text-center">No results found. Enter manually below.</div>';
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    resultsDiv.innerHTML = '<div class="p-3 text-gray-500 text-center">Search unavailable. Enter manually below.</div>';
+                }
+            }, 300);
+        }
+
+        function getNutrient(food, nutrientName) {
+            if (!food.foodNutrients) return 0;
+            const nutrient = food.foodNutrients.find(n => n.nutrientName === nutrientName);
+            return nutrient ? nutrient.value : 0;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function selectFood(name, calories, protein, carbs, fat) {
+            document.getElementById('foodName').value = name;
+            document.getElementById('foodCalories').value = calories;
+            document.getElementById('foodProtein').value = protein;
+            document.getElementById('foodCarbs').value = carbs;
+            document.getElementById('foodFat').value = fat;
+            document.getElementById('foodSearch').value = '';
+            document.getElementById('searchResults').classList.add('hidden');
+        }
+
+        // Close search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#foodSearch') && !e.target.closest('#searchResults')) {
+                document.getElementById('searchResults').classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
