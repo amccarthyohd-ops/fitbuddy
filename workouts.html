@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitBuddy - Workout Tracking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading...</p>
+        </div>
+    </div>
+
+    <div id="app" class="hidden pb-20">
+        <!-- Header -->
+        <header class="bg-white/10 backdrop-blur-lg text-white p-4 sticky top-0 z-40">
+            <div class="flex justify-between items-center max-w-lg mx-auto">
+                <a href="index.html" class="text-2xl">←</a>
+                <h1 class="text-xl font-bold">Workout Tracking</h1>
+                <div class="w-8"></div>
+            </div>
+        </header>
+
+        <main class="max-w-lg mx-auto p-4 space-y-4">
+            <!-- Weekly Summary -->
+            <div class="bg-white rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">This Week</h2>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4">
+                        <p class="text-4xl font-bold text-orange-600" id="weeklyWorkouts">0</p>
+                        <p class="text-sm text-gray-500 mt-1">workouts</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+                        <p class="text-4xl font-bold text-purple-600" id="weeklyMinutes">0</p>
+                        <p class="text-sm text-gray-500 mt-1">minutes</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Workout Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Log Workout</h2>
+                <form id="workoutForm" onsubmit="logWorkout(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Workout Type</label>
+                        <div class="grid grid-cols-3 gap-2" id="workoutTypes">
+                            <button type="button" onclick="selectWorkoutType(this, 'running')"
+                                class="workout-type-btn p-3 border-2 border-gray-200 rounded-xl text-center hover:border-primary transition">
+                                <span class="text-2xl">🏃</span>
+                                <p class="text-xs mt-1">Running</p>
+                            </button>
+                            <button type="button" onclick="selectWorkoutType(this, 'walking')"
+                                class="workout-type-btn p-3 border-2 border-gray-200 rounded-xl text-center hover:border-primary transition">
+                                <span class="text-2xl">🚶</span>
+                                <p class="text-xs mt-1">Walking</p>
+                            </button>
+                            <button type="button" onclick="selectWorkoutType(this, 'cycling')"
+                                class="workout-type-btn p-3 border-2 border-gray-200 rounded-xl text-center hover:border-primary transition">
+                                <span class="text-2xl">🚴</span>
+                                <p class="text-xs mt-1">Cycling</p>
+                            </button>
+                            <button type="button" onclick="selectWorkoutType(this, 'weights')"
+                                class="workout-type-btn p-3 border-2 border-gray-200 rounded-xl text-center hover:border-primary transition">
+                                <span class="text-2xl">🏋️</span>
+                                <p class="text-xs mt-1">Weights</p>
+                            </button>
+                            <button type="button" onclick="selectWorkoutType(this, 'yoga')"
+                                class="workout-type-btn p-3 border-2 border-gray-200 rounded-xl text-center hover:border-primary transition">
+                                <span class="text-2xl">🧘</span>
+                                <p class="text-xs mt-1">Yoga</p>
+                            </button>
+                            <button type="button" onclick="selectWorkoutType(this, 'other')"
+                                class="workout-type-btn p-3 border-2 border-gray-200 rounded-xl text-center hover:border-primary transition">
+                                <span class="text-2xl">💪</span>
+                                <p class="text-xs mt-1">Other</p>
+                            </button>
+                        </div>
+                        <input type="hidden" id="workoutType" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Duration (min)</label>
+                            <input type="number" id="workoutDuration" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                                placeholder="30">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Calories Burned</label>
+                            <input type="number" id="workoutCalories"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                                placeholder="200">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+                        <input type="text" id="workoutNotes"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="How did it feel?">
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-primary to-secondary text-white font-medium py-3 rounded-xl hover:opacity-90 transition">
+                        Log Workout
+                    </button>
+                </form>
+                <div id="workoutSuccess" class="hidden mt-4 bg-green-50 text-green-600 p-4 rounded-xl text-center">
+                    Workout logged! Great job! 💪
+                </div>
+            </div>
+
+            <!-- Workout History -->
+            <div class="bg-white rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Recent Workouts</h2>
+                <div id="workoutHistory" class="space-y-3">
+                    <!-- Workout entries will be added here -->
+                </div>
+                <p id="noWorkouts" class="text-gray-500 text-center py-4 hidden">No workouts logged yet</p>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+            <div class="flex justify-around max-w-lg mx-auto">
+                <a href="index.html" class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-primary transition">
+                    <span class="text-2xl">🏠</span>
+                    <span class="text-xs mt-1">Home</span>
+                </a>
+                <a href="weight.html" class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-primary transition">
+                    <span class="text-2xl">⚖️</span>
+                    <span class="text-xs mt-1">Weight</span>
+                </a>
+                <a href="food.html" class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-primary transition">
+                    <span class="text-2xl">🍎</span>
+                    <span class="text-xs mt-1">Food</span>
+                </a>
+                <a href="workouts.html" class="flex flex-col items-center py-3 px-6 text-primary">
+                    <span class="text-2xl">💪</span>
+                    <span class="text-xs mt-1">Workouts</span>
+                </a>
+                <a href="friend.html" class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-primary transition">
+                    <span class="text-2xl">👥</span>
+                    <span class="text-xs mt-1">Buddy</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        let currentUser = null;
+        let selectedWorkoutType = null;
+
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = user;
+            await loadWorkoutHistory();
+            await loadWeeklyStats();
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        });
+
+        function selectWorkoutType(btn, type) {
+            // Remove selection from all buttons
+            document.querySelectorAll('.workout-type-btn').forEach(b => {
+                b.classList.remove('border-primary', 'bg-primary/10');
+                b.classList.add('border-gray-200');
+            });
+
+            // Select this button
+            btn.classList.remove('border-gray-200');
+            btn.classList.add('border-primary', 'bg-primary/10');
+
+            selectedWorkoutType = type;
+            document.getElementById('workoutType').value = type;
+        }
+
+        async function loadWeeklyStats() {
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            oneWeekAgo.setHours(0, 0, 0, 0);
+
+            const snapshot = await firebase.firestore()
+                .collection('users').doc(currentUser.uid)
+                .collection('workouts')
+                .where('date', '>=', oneWeekAgo)
+                .get();
+
+            let totalWorkouts = snapshot.size;
+            let totalMinutes = 0;
+
+            snapshot.forEach(doc => {
+                totalMinutes += doc.data().duration || 0;
+            });
+
+            document.getElementById('weeklyWorkouts').textContent = totalWorkouts;
+            document.getElementById('weeklyMinutes').textContent = totalMinutes;
+        }
+
+        async function loadWorkoutHistory() {
+            const snapshot = await firebase.firestore()
+                .collection('users').doc(currentUser.uid)
+                .collection('workouts')
+                .orderBy('date', 'desc')
+                .limit(20)
+                .get();
+
+            const container = document.getElementById('workoutHistory');
+            container.innerHTML = '';
+
+            if (snapshot.empty) {
+                document.getElementById('noWorkouts').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('noWorkouts').classList.add('hidden');
+
+            const workoutEmojis = {
+                running: '🏃',
+                walking: '🚶',
+                cycling: '🚴',
+                weights: '🏋️',
+                yoga: '🧘',
+                other: '💪'
+            };
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const date = data.date?.toDate() || new Date();
+
+                const entry = document.createElement('div');
+                entry.className = 'flex justify-between items-center py-3 border-b border-gray-100 last:border-0';
+                entry.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${workoutEmojis[data.type] || '💪'}</span>
+                        <div>
+                            <p class="font-medium text-gray-800 capitalize">${data.type}</p>
+                            <p class="text-sm text-gray-500">${formatDate(date)}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-primary">${data.duration} min</p>
+                        ${data.calories ? `<p class="text-sm text-gray-500">${data.calories} cal</p>` : ''}
+                    </div>
+                `;
+                container.appendChild(entry);
+            });
+        }
+
+        function formatDate(date) {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+        }
+
+        async function logWorkout(e) {
+            e.preventDefault();
+
+            if (!selectedWorkoutType) {
+                alert('Please select a workout type');
+                return;
+            }
+
+            const workout = {
+                type: selectedWorkoutType,
+                duration: parseInt(document.getElementById('workoutDuration').value) || 0,
+                calories: parseInt(document.getElementById('workoutCalories').value) || 0,
+                notes: document.getElementById('workoutNotes').value,
+                date: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await firebase.firestore()
+                .collection('users').doc(currentUser.uid)
+                .collection('workouts').add(workout);
+
+            // Show success message
+            document.getElementById('workoutSuccess').classList.remove('hidden');
+
+            // Clear form
+            document.getElementById('workoutForm').reset();
+            document.querySelectorAll('.workout-type-btn').forEach(b => {
+                b.classList.remove('border-primary', 'bg-primary/10');
+                b.classList.add('border-gray-200');
+            });
+            selectedWorkoutType = null;
+
+            // Reload data
+            await loadWorkoutHistory();
+            await loadWeeklyStats();
+
+            // Hide success after 3 seconds
+            setTimeout(() => {
+                document.getElementById('workoutSuccess').classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

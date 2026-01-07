@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitBuddy - Your Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading...</p>
+        </div>
+    </div>
+
+    <div id="app" class="hidden pb-20">
+        <!-- Header -->
+        <header class="bg-white/10 backdrop-blur-lg text-white p-4 sticky top-0 z-40">
+            <div class="flex justify-between items-center max-w-lg mx-auto">
+                <a href="index.html" class="text-2xl">←</a>
+                <h1 class="text-xl font-bold">Your Buddy</h1>
+                <div class="w-8"></div>
+            </div>
+        </header>
+
+        <main class="max-w-lg mx-auto p-4 space-y-4">
+            <!-- Your Buddy Code -->
+            <div class="bg-white rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold text-gray-800 mb-2">Your Buddy Code</h2>
+                <p class="text-sm text-gray-500 mb-4">Share this code with a friend to connect!</p>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 bg-gradient-to-r from-primary to-secondary text-white text-2xl font-bold py-4 px-6 rounded-xl text-center tracking-widest" id="myBuddyCode">
+                        ------
+                    </div>
+                    <button onclick="copyBuddyCode()" class="bg-gray-100 hover:bg-gray-200 p-4 rounded-xl transition" title="Copy code">
+                        📋
+                    </button>
+                </div>
+                <p id="copyMessage" class="hidden text-green-600 text-sm text-center mt-2">Copied to clipboard!</p>
+            </div>
+
+            <!-- Add Buddy -->
+            <div id="addBuddySection" class="bg-white rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Add a Buddy</h2>
+                <form id="addBuddyForm" onsubmit="addBuddy(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Enter their buddy code</label>
+                        <input type="text" id="buddyCodeInput" required maxlength="6"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-center text-xl tracking-widest uppercase"
+                            placeholder="ABC123">
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-primary to-secondary text-white font-medium py-3 rounded-xl hover:opacity-90 transition">
+                        Connect with Buddy
+                    </button>
+                </form>
+                <div id="buddyError" class="hidden mt-4 bg-red-50 text-red-600 p-4 rounded-xl text-center"></div>
+                <div id="buddySuccess" class="hidden mt-4 bg-green-50 text-green-600 p-4 rounded-xl text-center"></div>
+            </div>
+
+            <!-- Buddy Info (shown when connected) -->
+            <div id="buddyInfoSection" class="hidden bg-white rounded-2xl p-6 shadow-xl">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-2xl" id="buddyInitial">
+                        ?
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800" id="buddyName">Loading...</h2>
+                        <p class="text-gray-500">Your Accountability Buddy</p>
+                    </div>
+                </div>
+
+                <!-- Buddy's Progress -->
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+                        <h3 class="font-medium text-gray-700 mb-2">Weight Progress</h3>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm text-gray-500">Started at</p>
+                                <p class="text-lg font-bold text-gray-800" id="buddyStartWeight">-- lbs</p>
+                            </div>
+                            <div class="text-2xl">→</div>
+                            <div>
+                                <p class="text-sm text-gray-500">Current</p>
+                                <p class="text-lg font-bold text-primary" id="buddyCurrentWeight">-- lbs</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Lost</p>
+                                <p class="text-lg font-bold text-green-500" id="buddyWeightLost">-- lbs</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
+                            <p class="text-3xl font-bold text-green-600" id="buddyTodayCalories">--</p>
+                            <p class="text-sm text-gray-500">calories today</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 text-center">
+                            <p class="text-3xl font-bold text-orange-600" id="buddyWeekWorkouts">--</p>
+                            <p class="text-sm text-gray-500">workouts this week</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div>
+                        <h3 class="font-medium text-gray-700 mb-2">Recent Activity</h3>
+                        <div id="buddyActivity" class="space-y-2">
+                            <!-- Activity items will be added here -->
+                        </div>
+                        <p id="noBuddyActivity" class="text-gray-500 text-center py-4 hidden">No recent activity</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison -->
+            <div id="comparisonSection" class="hidden bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl p-6 shadow-xl text-white">
+                <h2 class="text-lg font-semibold mb-4">Who's Winning? 🏆</h2>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-white/20 rounded-xl p-4">
+                        <p class="text-sm opacity-90">You've lost</p>
+                        <p class="text-3xl font-bold" id="yourLost">0 lbs</p>
+                    </div>
+                    <div class="bg-white/20 rounded-xl p-4">
+                        <p class="text-sm opacity-90">They've lost</p>
+                        <p class="text-3xl font-bold" id="theirLost">0 lbs</p>
+                    </div>
+                </div>
+                <p class="text-center mt-4 text-lg font-medium" id="winnerMessage">Keep pushing! 💪</p>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+            <div class="flex justify-around max-w-lg mx-auto">
+                <a href="index.html" class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-primary transition">
+                    <span class="text-2xl">🏠</span>
+                    <span class="text-xs mt-1">Home</span>
+                </a>
+                <a href="weight.html" class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-primary transition">
+                    <span class="text-2xl">⚖️</span>
+                    <span class="text-xs mt-1">Weight</span>
+                </a>
+                <a href="food.html" class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-primary transition">
+                    <span class="text-2xl">🍎</span>
+                    <span class="text-xs mt-1">Food</span>
+                </a>
+                <a href="workouts.html" class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-primary transition">
+                    <span class="text-2xl">💪</span>
+                    <span class="text-xs mt-1">Workouts</span>
+                </a>
+                <a href="friend.html" class="flex flex-col items-center py-3 px-6 text-primary">
+                    <span class="text-2xl">👥</span>
+                    <span class="text-xs mt-1">Buddy</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        let currentUser = null;
+        let userData = null;
+
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = user;
+            await loadUserData();
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        });
+
+        async function loadUserData() {
+            const doc = await firebase.firestore().collection('users').doc(currentUser.uid).get();
+            userData = doc.data();
+
+            // Show user's buddy code
+            document.getElementById('myBuddyCode').textContent = userData.buddyCode || '------';
+
+            // If user has a buddy, load buddy info
+            if (userData.buddyId) {
+                document.getElementById('addBuddySection').classList.add('hidden');
+                document.getElementById('buddyInfoSection').classList.remove('hidden');
+                document.getElementById('comparisonSection').classList.remove('hidden');
+                await loadBuddyInfo(userData.buddyId);
+            } else {
+                document.getElementById('addBuddySection').classList.remove('hidden');
+                document.getElementById('buddyInfoSection').classList.add('hidden');
+                document.getElementById('comparisonSection').classList.add('hidden');
+            }
+        }
+
+        async function loadBuddyInfo(buddyId) {
+            const buddyDoc = await firebase.firestore().collection('users').doc(buddyId).get();
+            const buddy = buddyDoc.data();
+
+            // Basic info
+            document.getElementById('buddyName').textContent = buddy.name;
+            document.getElementById('buddyInitial').textContent = buddy.name.charAt(0).toUpperCase();
+
+            // Weight progress
+            document.getElementById('buddyStartWeight').textContent = buddy.startWeight + ' lbs';
+            document.getElementById('buddyCurrentWeight').textContent = buddy.currentWeight + ' lbs';
+            const buddyLost = buddy.startWeight - buddy.currentWeight;
+            document.getElementById('buddyWeightLost').textContent = buddyLost.toFixed(1) + ' lbs';
+
+            // Today's calories
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const foodSnapshot = await firebase.firestore()
+                .collection('users').doc(buddyId)
+                .collection('food')
+                .where('date', '>=', today)
+                .get();
+
+            let todayCalories = 0;
+            foodSnapshot.forEach(doc => todayCalories += doc.data().calories || 0);
+            document.getElementById('buddyTodayCalories').textContent = todayCalories;
+
+            // This week's workouts
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const workoutSnapshot = await firebase.firestore()
+                .collection('users').doc(buddyId)
+                .collection('workouts')
+                .where('date', '>=', oneWeekAgo)
+                .get();
+            document.getElementById('buddyWeekWorkouts').textContent = workoutSnapshot.size;
+
+            // Comparison
+            const yourLost = userData.startWeight - userData.currentWeight;
+            document.getElementById('yourLost').textContent = yourLost.toFixed(1) + ' lbs';
+            document.getElementById('theirLost').textContent = buddyLost.toFixed(1) + ' lbs';
+
+            if (yourLost > buddyLost) {
+                document.getElementById('winnerMessage').textContent = "You're in the lead! Keep it up! 🏆";
+            } else if (buddyLost > yourLost) {
+                document.getElementById('winnerMessage').textContent = buddy.name + " is ahead! Time to catch up! 🔥";
+            } else {
+                document.getElementById('winnerMessage').textContent = "You're tied! Push harder! 💪";
+            }
+
+            // Recent activity
+            await loadBuddyActivity(buddyId);
+        }
+
+        async function loadBuddyActivity(buddyId) {
+            const container = document.getElementById('buddyActivity');
+            container.innerHTML = '';
+
+            // Get recent weights
+            const weights = await firebase.firestore()
+                .collection('users').doc(buddyId)
+                .collection('weights')
+                .orderBy('date', 'desc')
+                .limit(3)
+                .get();
+
+            // Get recent workouts
+            const workouts = await firebase.firestore()
+                .collection('users').doc(buddyId)
+                .collection('workouts')
+                .orderBy('date', 'desc')
+                .limit(3)
+                .get();
+
+            const activities = [];
+
+            weights.forEach(doc => {
+                const data = doc.data();
+                activities.push({
+                    type: 'weight',
+                    date: data.date?.toDate() || new Date(),
+                    text: `Logged weight: ${data.weight} lbs`,
+                    emoji: '⚖️'
+                });
+            });
+
+            workouts.forEach(doc => {
+                const data = doc.data();
+                activities.push({
+                    type: 'workout',
+                    date: data.date?.toDate() || new Date(),
+                    text: `${data.type} workout - ${data.duration} min`,
+                    emoji: '💪'
+                });
+            });
+
+            // Sort by date
+            activities.sort((a, b) => b.date - a.date);
+
+            if (activities.length === 0) {
+                document.getElementById('noBuddyActivity').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('noBuddyActivity').classList.add('hidden');
+
+            // Show top 5
+            activities.slice(0, 5).forEach(activity => {
+                const entry = document.createElement('div');
+                entry.className = 'flex items-center gap-3 bg-gray-50 rounded-xl p-3';
+                entry.innerHTML = `
+                    <span class="text-xl">${activity.emoji}</span>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-800">${activity.text}</p>
+                        <p class="text-xs text-gray-500">${formatDate(activity.date)}</p>
+                    </div>
+                `;
+                container.appendChild(entry);
+            });
+        }
+
+        function formatDate(date) {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+        }
+
+        function copyBuddyCode() {
+            const code = document.getElementById('myBuddyCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                document.getElementById('copyMessage').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('copyMessage').classList.add('hidden');
+                }, 2000);
+            });
+        }
+
+        async function addBuddy(e) {
+            e.preventDefault();
+            const code = document.getElementById('buddyCodeInput').value.toUpperCase().trim();
+
+            const errorDiv = document.getElementById('buddyError');
+            const successDiv = document.getElementById('buddySuccess');
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+
+            if (code === userData.buddyCode) {
+                errorDiv.textContent = "That's your own code! Enter your friend's code.";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            // Find user with this buddy code
+            const query = await firebase.firestore()
+                .collection('users')
+                .where('buddyCode', '==', code)
+                .get();
+
+            if (query.empty) {
+                errorDiv.textContent = "No user found with that code. Check the code and try again.";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            const buddyDoc = query.docs[0];
+            const buddyId = buddyDoc.id;
+
+            // Link both users
+            await firebase.firestore().collection('users').doc(currentUser.uid).update({
+                buddyId: buddyId
+            });
+            await firebase.firestore().collection('users').doc(buddyId).update({
+                buddyId: currentUser.uid
+            });
+
+            successDiv.textContent = `Connected with ${buddyDoc.data().name}!`;
+            successDiv.classList.remove('hidden');
+
+            // Reload page to show buddy info
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

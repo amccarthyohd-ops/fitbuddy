@@ -1,0 +1,24 @@
+{
+  "name": "fitbuddy",
+  "version": "1.0.0",
+  "description": "A fitness tracking app to share progress with your accountability buddy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "fitness",
+    "tracker",
+    "health",
+    "accountability"
+  ],
+  "author": "Arielle",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
